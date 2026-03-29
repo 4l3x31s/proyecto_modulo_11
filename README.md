@@ -1,118 +1,127 @@
-# Sistema de Reconocimiento de Billetes - Proyecto de Maestría
+# Reconocedor de Billetes Bolivianos
 
-**Autores:** 
+Sistema de reconocimiento de billetes bolivianos utilizando PyTorch (GPU) y OCR.
 
-        Fernando Luis Fernandez Castro 
-        Alexeis Vladimir Carrillo Pinaya
 
-Sistema de reconocimiento de billetes Bolivianos utilizando Transfer Learning con MobileNetV2 y TensorFlow.
+## Participantes
+- Alexeis Vladimir Carrillo Pinaya
+- Fernando Luis Fernandez Castro
 
-## Descripción
+## Requisitos
 
-Este proyecto implementa un modelo de deep learning para clasificar billetes Bolivianos (20 y 50 Bs, según los datos actuales). Utiliza:
+### Python
+- **Python 3.12.10** (recomendado)
+- También funciona con Python 3.12.x
 
-- **MobileNetV2** preentrenado en ImageNet como base
-- **Transfer Learning** con fine-tuning de las últimas capas
-- **Aumento de datos** para robustez del modelo
+### Hardware
+- GPU NVIDIA con soporte CUDA (RTX 3600 verificada)
+- Cámara web
+
+### Software Adicional
+- **Tesseract OCR**: https://github.com/UB-Mannheim/tesseract/wiki
+  - Instalar en: `C:\Program Files\Tesseract-OCR`
+  - Agregar al PATH del sistema
+
+## Instalación
+
+### 1. Crear entorno virtual
+
+```bash
+# Desde la carpeta del proyecto
+py -3.12 -m venv venv
+```
+
+### 2. Activar entorno virtual
+
+```bash
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+
+### 3. Instalar PyTorch con CUDA
+
+```bash
+# IMPORTANTE: Primero instalar PyTorch con soporte CUDA
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+```
+
+### 4. Instalar el resto de dependencias
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Estructura del Proyecto
 
 ```
-ProyectoMaestria/
-├── 0_SegmentarYRecortar.py   # Script para segmentar/recortar imágenes usando anotaciones de LabelMe
-├── 1_MobileNetV2Train.py     # Script de entrenamiento del modelo
-├── 2_testModeloImagenesTest.py # Script de prueba con imágenes
-├── class_indices.json         # Mapeo de clases (géneros del modelo)
-├── requierements.txt          # Dependencias del proyecto
-├── modelo_billetes_mobilenetv2_final.h5  # Modelo final entrenado
-├── mejor_modelo_billetes.h5   # Mejor modelo guardado durante entrenamiento
-└── dataset/
-    ├── train/                 # Imágenes de entrenamiento
-    │   ├── 20/                # Billetes de 20 Bs
-    │   └── 50/                # Billetes de 50 Bs
-    ├── val/                   # Imágenes de validación
-    │   ├── 20/
-    │   └── 50/
-    └── test_images/           # Imágenes para pruebas
+proyecto/
+├── dataset/              # Imágenes de entrenamiento
+│   ├── 10/              # Billetes de 10 Bs
+│   ├── 20/              # Billetes de 20 Bs
+│   ├── 50/              # Billetes de 50 Bs
+│   ├── 100/             # Billetes de 100 Bs
+│   └── 200/             # Billetes de 200 Bs
+├── train.py              # Script de entrenamiento
+├── recognize.py          # Script de reconocimiento en tiempo real
+├── billete_model.pth    # Modelo entrenado
+└── requirements.txt     # Dependencias
 ```
 
-## Requisitos
+## Uso
 
-- Python 3.10
-- TensorFlow 2.15.0
-- OpenCV
-- NumPy 1.26.4
-- scikit-learn
-- pyttsx3 (para síntesis de voz)
-
-### Instalación
+### Entrenamiento
 
 ```bash
-# Crear entorno virtual
-py -3.10 -m venv env
-
-# Activar entorno (Windows)
-env\Scripts\activate
-
-# Instalar dependencias
-pip install --upgrade pip
-pip install tensorflow==2.15.0
-pip install numpy==1.26.4 opencv-python==4.9.0.80
-pip install pillow scipy scikit-learn pyttsx3
+py train.py
 ```
 
-## Scripts
+El entrenamiento genera el archivo `billete_model.pth`.
 
-### 1. Segmentación y Recorte (`0_SegmentarYRecortar.py`)
+### Reconocimiento en Tiempo Real
 
-Procesa imágenes originales con anotaciones JSON de LabelMe para:
-- Segmentar la región del billete usando polígonos
-- Recortar y redimensionar a 224x224
-- Guardar en la estructura de carpetas por clase
+```bash
+py recognize.py
+```
 
-**Uso:** Ejecutar desde la carpeta raíz con imágenes en `dataset_original/`
+Presionar `q` para salir.
 
-### 2. Entrenamiento (`1_MobileNetV2Train.py`)
+## Dependencias
 
-Entrena el modelo con:
-- **Entradas:** Imágenes de entrenamiento en `dataset/train/`
-- **Validación:** Imágenes en `dataset/val/`
-- **Aumento de datos:** Rotación, zoom, brillo, flip horizontal
-- **Fine-tuning:** Descongela últimas 30 capas de MobileNetV2
-- **Callbacks:** EarlyStopping y ModelCheckpoint
+| Paquete | Versión Mínima |
+|---------|----------------|
+| torch | 2.0.0 |
+| torchvision | 0.15.0 |
+| opencv-python | 4.8.0 |
+| opencv-python-headless | 4.8.0 |
+| numpy | 1.24.0 |
+| Pillow | 10.0.0 |
+| scikit-learn | 1.3.0 |
+| tqdm | 4.65.0 |
+| pytesseract | 0.3.10 |
 
-**Parámetros:**
-- Tamaño de imagen: 224x224
-- Batch size: 16
-- Epochs: 50 (con early stopping)
-- Learning rate: 1e-5 (fine-tuning)
+## Características
 
-**Salida:**
-- `mejor_modelo_billetes.h5` - Mejor modelo según validación
-- `modelo_billetes_mobilenetv2_final.h5` - Modelo final
-- `class_indices.json` - Índices de clases
+- **Reconocimiento de corte**: 10, 20, 50, 100, 200 Bolivianos
+- **Reconocimiento de serie**: A, B, C
+- **Lectura de número de serie**: OCR (ej: 083594277 A)
+- **GPU**: Utiliza CUDA si está disponible
 
-### 3. Predicción (`2_testModeloImagenesTest.py`)
+## Solución de Problemas
 
-Prueba el modelo con imágenes en `dataset/test_images/`:
-- Muestra ventana con imagen y predicción
-- Annuncia el resultado en voz (pyttsx3)
-- Solo muestra predicciones con confianza > 65%
+### Error de Tesseract
+Si aparece error de Tesseract, verificar que esté instalado en:
+```
+C:\Program Files\Tesseract-OCR\tesseract.exe
+```
 
-## Clases Actuales
+### GPU no detectada
+El código automáticamente usa CPU si CUDA no está disponible. Verificar drivers de NVIDIA actualizados.
 
-Según `class_indices.json`:
-- `0`: 20 Bs
-- `1`: 50 Bs
-
-## Métricas del Modelo
-
-El script de entrenamiento genera:
-- Matriz de confusión
-- F1-score ponderado
-
-## Notas
-
-- El modelo actual está entrenado solo con clases 20 y 50 Bs
-- Para agregar más denominaciones (10, 100, 200), agregar carpetas en `dataset/train/` y `dataset/val/`
-- Las imágenes deben estar redimensionadas a 224x224 para inferencia
+### Error al cargar modelo
+Si hay error de "size mismatch", re-entrenar el modelo:
+```bash
+py train.py
+```
